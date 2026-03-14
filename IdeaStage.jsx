@@ -414,9 +414,19 @@ function IdeasPage({ user, onSignInClick }) {
   const [submitted, setSubmitted] = useState(false);
   const [ideas, setIdeas]       = useState(defaultIdeas);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim() || !body.trim()) return;
-    setIdeas((prev) => [{ title, category, body, author: user.name }, ...prev]);
+
+    // Get AI feedback
+    const response = await fetch('http://localhost:3001/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, category, body }),
+    });
+
+    const data = await response.json();
+
+    setIdeas((prev) => [{ title, category, body, author: user.name, feedback: data.feedback }, ...prev]);
     setTitle(""); setBody(""); setCategory("Product");
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 4000);
@@ -477,6 +487,11 @@ function IdeasPage({ user, onSignInClick }) {
               </div>
               <div className="idea-card-title">{idea.title}</div>
               <div className="idea-card-body">{idea.body}</div>
+              {idea.feedback && (
+                <div style={{ marginTop: 10, padding: "10px 14px", background: "#f0f4ff", borderRadius: 8, fontSize: 13, color: "#3949ab", lineHeight: 1.6 }}>
+                  <strong>AI Feedback:</strong> {idea.feedback}
+                </div>
+              )}
             </div>
           );
         })}
